@@ -10,11 +10,56 @@ output: html_document
 install.packages("viridis")
 library(sf)
 library(data.table)
-library(viridis) # for nice colors
+library(viridis)
 ```
+```{r}
+file.exists("C:\\Users\\aasie\\OneDrive\\Documentos\\GIS713-Homework1\\cb_2015_us_county_20mcb_2015_us_county_20m.shp")
+```
+```{r}
+# Try printing the path to see exactly what R is seeing
+path <- "C:\\Users\\aasie\\OneDrive\\Documentos\\GIS713-Homework1\\cb_2015_us_county_20mcb_2015_us_county_20m.shp"
+print(path)
+nchar(path)
+```
+
+
+```{r}
+# Read in the county shapefiles 
+# Need to write the code in a way so that the filepaths will only need to be changed in one place for the code to run 
+usa_counties <- st_read("C:\\Users\\aasie\\OneDrive\\Documentos\\GIS713-Homework1\\cb_2015_us_county_20mcb_2015_us_county_20m.shp")
+class(usa_counties)
+names(usa_counties)
+```
+
 
 ```{r}
 # Exploring the data 
+
+```
+
+
+```{r}
+#Q1: What US county has recorded the highest average corn yield since 1990?
+```
+
+```{r}
+#Q2: What is the highest reported annual corn yield? In what county?
+
+```
+
+```{r}
+#Q3: What state has the most acres of soy in 2014?4
+
+```
+
+
+```{r}
+#Q4: What state has the highest average land fraction used for soy production since 1990?
+
+```
+
+```{r}
+#Q5: Maps: county average corn yield since 1990; county rate of corn yield increase (slope of trend since 1990)
 
 ```
 
