@@ -7,10 +7,12 @@ output: html_document
 
 ```{r}
 # Reading in the data 
+install.packages('R.utils')
 install.packages("viridis")
 library(sf)
 library(data.table)
 library(viridis)
+library(R.utils)
 ```
 ```{r}
 file.exists("C:\\Users\\aasie\\OneDrive\\Documentos\\GIS713-Homework1\\cb_2015_us_county_20mcb_2015_us_county_20m.shp")
@@ -20,6 +22,10 @@ file.exists("C:\\Users\\aasie\\OneDrive\\Documentos\\GIS713-Homework1\\cb_2015_u
 path <- "C:\\Users\\aasie\\OneDrive\\Documentos\\GIS713-Homework1\\cb_2015_us_county_20mcb_2015_us_county_20m.shp"
 print(path)
 nchar(path)
+```
+```{r}
+# Reading in using data.table 
+crops <- fread("qs.crops_20170829.txt.gz")
 ```
 
 
