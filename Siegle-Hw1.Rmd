@@ -1,0 +1,20 @@
+---
+title: "Siegle_Hw1"
+author: "Aaron_Siegle"
+date: "2026-09-01"
+output: html_document
+---
+
+```{r}
+# Reading in the data 
+install.packages("viridis")
+library(sf)
+library(data.table)
+library(viridis) # for nice colors
+```
+
+```{r}
+# Exploring the data 
+
+```
+
