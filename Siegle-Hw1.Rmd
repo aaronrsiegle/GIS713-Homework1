@@ -14,38 +14,49 @@ library(data.table)
 library(viridis)
 library(R.utils)
 ```
-```{r}
-file.exists("C:\\Users\\aasie\\OneDrive\\Documentos\\GIS713-Homework1\\cb_2015_us_county_20mcb_2015_us_county_20m.shp")
-```
-```{r}
-# Try printing the path to see exactly what R is seeing
-path <- "C:\\Users\\aasie\\OneDrive\\Documentos\\GIS713-Homework1\\cb_2015_us_county_20mcb_2015_us_county_20m.shp"
-print(path)
-nchar(path)
-```
+
 ```{r}
 # Reading in using data.table 
 crops <- fread("qs.crops_20170829.txt.gz")
 ```
 
-
-```{r}
-# Read in the county shapefiles 
-# Need to write the code in a way so that the filepaths will only need to be changed in one place for the code to run 
-usa_counties <- st_read("C:\\Users\\aasie\\OneDrive\\Documentos\\GIS713-Homework1\\cb_2015_us_county_20mcb_2015_us_county_20m.shp")
-class(usa_counties)
-names(usa_counties)
-```
-
-
 ```{r}
 # Exploring the data 
+crops[, range(YEAR0)]
+```
 
+```{r}
+names(crops)
+```
+
+```{r}
+crops[, unique(COMMODITY_DESC)]
+```
+
+```{r}
+crops[COMMODITY_DESC == "CORN"] 
+```
+
+```{r}
+crops[COMMODITY_DESC == "CORN", .N, by=SHORT_DESC][order(-N)] 
+```
+
+```{r}
+crops[SHORT_DESC == "CORN, GRAIN – YIELD, MEASURED IN BU / ACRE", .N, by=.(YEAR, COUNTY_NAME, STATE_NAME)]
+```
+
+```{r}
+crops[SHORT_DESC == "CORN, GRAIN – YIELD, MEASURED IN BU / ACRE", .N, by=.(YEAR, COUNTY_NAME, STATE_NAME)] [order(-N)] 
+```
+
+```{r}
+crops[SHORT_DESC == "CORN, GRAIN – YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & STATE_NAME == "TEXAS" & YEAR == 1987]
 ```
 
 
 ```{r}
 #Q1: What US county has recorded the highest average corn yield since 1990?
+crops[SHORT_DESC == "CORN, GRAIN – YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY", .N, STATE_NAME][order(-n)]
 ```
 
 ```{r}
@@ -63,6 +74,18 @@ names(usa_counties)
 #Q4: What state has the highest average land fraction used for soy production since 1990?
 
 ```
+
+
+```{r}
+# Reading in the shapefile 
+
+county <- st_read("/vsizip/cb_2015_us_county_20m (2).zip/cb_2015_us_county_20m/cb_2015_us_county_20m.shp")
+```
+```{r}
+# Test map 
+plot(county)
+```
+
 
 ```{r}
 #Q5: Maps: county average corn yield since 1990; county rate of corn yield increase (slope of trend since 1990)
