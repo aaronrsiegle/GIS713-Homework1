@@ -22,7 +22,7 @@ crops <- fread("qs.crops_20170829.txt.gz")
 
 ```{r}
 # Exploring the data 
-crops[, range(YEAR0)]
+crops[, range("YEAR0")]
 ```
 
 ```{r}
@@ -42,26 +42,35 @@ crops[COMMODITY_DESC == "CORN", .N, by=SHORT_DESC][order(-N)]
 ```
 
 ```{r}
-crops[SHORT_DESC == "CORN, GRAIN – YIELD, MEASURED IN BU / ACRE", .N, by=.(YEAR, COUNTY_NAME, STATE_NAME)]
+crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE", .N, by=.(YEAR, COUNTY_NAME, STATE_NAME)]
 ```
 
 ```{r}
-crops[SHORT_DESC == "CORN, GRAIN – YIELD, MEASURED IN BU / ACRE", .N, by=.(YEAR, COUNTY_NAME, STATE_NAME)] [order(-N)] 
+crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE", .N, by=.(YEAR, COUNTY_NAME, STATE_NAME)][order(-N)] 
 ```
 
 ```{r}
-crops[SHORT_DESC == "CORN, GRAIN – YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & STATE_NAME == "TEXAS" & YEAR == 1987]
+crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & STATE_NAME == "TEXAS" & YEAR == 1987]
+```
+
+
+
+```{r}
+crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY", .N, STATE_NAME][order(-N)]
 ```
 
 
 ```{r}
 #Q1: What US county has recorded the highest average corn yield since 1990?
-crops[SHORT_DESC == "CORN, GRAIN – YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY", .N, STATE_NAME][order(-n)]
+crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & YEAR >= 1990, .(avg_yield = mean(as.numeric(VALUE), na.rm = TRUE)), by = .(STATE_NAME, COUNTY_NAME)][order(-avg_yield)]
+# The county with the highest average corn yield since 1990 is Benton County, Washington with an average corn yield of 225.84 Bushels per acre. 
 ```
+
 
 ```{r}
 #Q2: What is the highest reported annual corn yield? In what county?
-
+crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY", .(max_yield = max(as.numeric(VALUE), na.rm = TRUE)), by = .(STATE_NAME, COUNTY_NAME, YEAR)][order(-max_yield)]
+# The highest reported annual corn yield was in 2016 in Sutter County, California with a yield of 264.1 bushels per acre. 
 ```
 
 ```{r}
