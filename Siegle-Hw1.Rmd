@@ -74,8 +74,30 @@ crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DES
 ```
 
 ```{r}
-#Q3: What state has the most acres of soy in 2014?4
+crops[COMMODITY_DESC == "SOYBEANS"] 
+```
+```{r}
+crops[COMMODITY_DESC == "SOYBEANS", .N, by=SHORT_DESC][order(-N)]
+```
+```{r}
+crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & YEAR == 2014, .N, by=.(YEAR, STATE_NAME)]
+```
+```{r}
+crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & YEAR == 2014, .N, by=.(YEAR, STATE_NAME)][order(-N)]
+```
 
+```{r}
+crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & AGG_LEVEL_DESC == "COUNTY" & STATE_NAME == "IOWA" & YEAR == 2014]
+```
+```{r}
+crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & AGG_LEVEL_DESC == "COUNTY", .N, STATE_NAME][order(-N)]
+```
+
+
+```{r}
+#Q3: What state has the most acres of soy in 2014?
+# something is off here with all of the NAs coerced to being true 
+crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & YEAR == 2014, .(max_soy_acres = max(as.numeric(VALUE), na.rm = TRUE)), by=.(STATE_NAME)][order(-max_soy_acres)]
 ```
 
 
