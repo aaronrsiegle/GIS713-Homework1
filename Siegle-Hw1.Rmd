@@ -166,20 +166,30 @@ plot(county)
 corn_yield_map <- crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & YEAR >= 1990, .(avg_yield = mean(as.numeric(gsub(",", "", VALUE)), na.rm = TRUE)), by = .(STATE_NAME, COUNTY_NAME, FIPS)]
 print(corn_yield_map)
 ```
-```{r}
-# Reprojecting the data 
-corn_yield_map_projected <- st_transform(corn_yield_map, crs = 4269)
-```
-
 
 ```{r}
 #Q5: Map 1: county average corn yield since 1990
-plot(corn_yield_map_projected["avg_yield"], breaks="jenks", key.pos=4, axes=T, main="County Average Corn Yield Since 1990")
+library(viridis)
+plot(corn_yield_map_projected["avg_yield"], pal = viridis, breaks="jenks", key.pos=4, axes=T, main="County Average Corn Yield Since 1990 (BU/Acre)", xlim = c(-125, -66), ylim = c(24, 50))
 ```
 
 ```{r}
 # Finding the most recent year in the NASS Data
-crops$YEAR[order(-year())]
+crops[, unique(YEAR)]
+```
+```{r}
+# Isolating the 2018 corn yield value
+corn_yield_2018 <- crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & YEAR == 2018, .(STATE_NAME, COUNTY_NAME, VALUE)]
+print(corn_yield_2018)
+```
+
+```{r}
+# Isolating the 1990 corn yield value 
+
+```
+
+```{r}
+# Finding the county level increase in corn yield 
 ```
 
 
