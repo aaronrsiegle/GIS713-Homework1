@@ -48,6 +48,13 @@ crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE", .N, by=.(YEAR,
 ```{r}
 crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE", .N, by=.(YEAR, COUNTY_NAME, STATE_NAME)][order(-N)] 
 ```
+```{r}
+print(crops$COUNTY_ANSI)
+```
+```{r}
+print(crops$STATE_ANSI)
+```
+
 
 ```{r}
 crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & STATE_NAME == "TEXAS" & YEAR == 1987]
@@ -92,26 +99,63 @@ crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & AGG_LEVEL_DESC == "COUNTY" & ST
 ```{r}
 crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & AGG_LEVEL_DESC == "COUNTY", .N, STATE_NAME][order(-N)]
 ```
+ 
 
 
 ```{r}
 #Q3: What state has the most acres of soy in 2014?
-# something is off here with all of the NAs coerced to being true 
-crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & YEAR == 2014, .(max_soy_acres = max(as.numeric(VALUE), na.rm = TRUE)), by=.(STATE_NAME)][order(-max_soy_acres)]
+# I'm not entirely sure how to deal with the D values but I want to make sure that counties with D values are included in the state total 
+crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & YEAR == 2014 & AGG_LEVEL_DESC == "COUNTY", .(soy_acres = sum(as.numeric(gsub(",","",ifelse(VALUE == "(D)", "0", VALUE))), na.rm = TRUE)), by=.(STATE_NAME)][order(-soy_acres)]
+# Iowa had the most acres of soy planted in 2014, with 9.85 million acres planted. 
+```
+
+```{r}
+# Reading in the shapefile 
+county <- st_read("/vsizip/cb_2015_us_county_20m (2).zip/cb_2015_us_county_20m/cb_2015_us_county_20m.shp")
+```
+
+
+```{r}
+names(county)
+```
+```{r}
+head(county)
+```
+```{r}
+county$FIPS <- paste(county$STATEFP, county$COUNTYFP, sep = "")
+print(county$FIPS)
+```
+
+
+```{r}
+crops$FIPS <- paste(crops$STATE_ANSI, crops$COUNTY_ANSI, sep = "")
+print(crops$FIPS)
+```
+
+
+```{r}
+# Merge the crops dataset with the county dataset
+county_crops <- merge(county, crops, by="FIPS", all.x=TRUE, all.y=TRUE)
+print(county_crops$FIPS)
+```
+```{r}
+# This takes a long time to run 
+class(county_crops)
+county_crops <- as.data.table(county_crops)
+```
+```{r}
+# Convert to numeric
+county_crops[, VALUE := as.numeric(gsub(",","",ifelse(VALUE == "(D)", "0", VALUE)))]
 ```
 
 
 ```{r}
 #Q4: What state has the highest average land fraction used for soy production since 1990?
-
+county_crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & YEAR >= 1990, .(avg_frac_soy = mean(VALUE/as.numeric(ALAND), na.rm = TRUE)), by=.(STATE_NAME)][order(-avg_frac_soy)]
+# Illinois has the highest average land fraction used for soy since 1990 at 6.78x10^-5. 
 ```
 
 
-```{r}
-# Reading in the shapefile 
-
-county <- st_read("/vsizip/cb_2015_us_county_20m (2).zip/cb_2015_us_county_20m/cb_2015_us_county_20m.shp")
-```
 ```{r}
 # Test map 
 plot(county)
@@ -119,7 +163,11 @@ plot(county)
 
 
 ```{r}
-#Q5: Maps: county average corn yield since 1990; county rate of corn yield increase (slope of trend since 1990)
+#Q5: Map 1: county average corn yield since 1990
 
+```
+
+```{r}
+#Q5: Map 2: county rate of corn yield increase (slope of trend since 1990)
 ```
 
