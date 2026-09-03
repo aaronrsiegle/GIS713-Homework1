@@ -178,9 +178,30 @@ plot(corn_yield_map_projected["avg_yield"], pal = viridis, breaks="jenks", key.p
 crops[, unique(YEAR)]
 ```
 ```{r}
-# Isolating the 2018 corn yield value
-corn_yield_2018 <- crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & YEAR == 2018, .(STATE_NAME, COUNTY_NAME, VALUE)]
-print(corn_yield_2018)
+crops[grepl("CORN.*YIELD", SHORT_DESC), unique(SHORT_DESC)]
+```
+```{r}
+crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE", unique(YEAR)]
+```
+```{r}
+crops[, class(VALUE)]
+```
+
+```{r}
+# Make sure that values are Numeric 
+crops[, VALUE := as.numeric(gsub(",","",ifelse(VALUE == "(D)", "0", VALUE)))]
+```
+
+```{r}
+char_cols <- names(crops)[sapply(crops, is.character)]
+crops[, (char_cols) := lapply(.SD, trimws), .SDcols = char_cols]
+```
+
+
+```{r}
+# Isolating the 2017 corn yield value
+corn_yield_2017 <- crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & YEAR == 2017, .(STATE_NAME, COUNTY_NAME, VALUE)]
+print(corn_yield_2017)
 ```
 
 ```{r}
