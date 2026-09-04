@@ -2,69 +2,26 @@
 title: "Siegle_Hw1"
 author: "Aaron_Siegle"
 date: "2026-09-01"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
-```{r}
+```{r, results='hide', message=FALSE, warning=FALSE}
 # Reading in the data 
-install.packages('R.utils')
-install.packages("viridis")
+# install.packages('R.utils')
+# install.packages("viridis")
 library(sf)
 library(data.table)
 library(viridis)
 library(R.utils)
 ```
 
-```{r}
+```{r, results='hide'}
 # Reading in using data.table 
 crops <- fread("qs.crops_20170829.txt.gz")
 ```
 
-```{r}
-# Exploring the data 
-crops[, range("YEAR0")]
-```
-
-```{r}
-names(crops)
-```
-
-```{r}
-crops[, unique(COMMODITY_DESC)]
-```
-
-```{r}
-crops[COMMODITY_DESC == "CORN"] 
-```
-
-```{r}
-crops[COMMODITY_DESC == "CORN", .N, by=SHORT_DESC][order(-N)] 
-```
-
-```{r}
-crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE", .N, by=.(YEAR, COUNTY_NAME, STATE_NAME)]
-```
-
-```{r}
-crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE", .N, by=.(YEAR, COUNTY_NAME, STATE_NAME)][order(-N)] 
-```
-```{r}
-print(crops$COUNTY_ANSI)
-```
-```{r}
-print(crops$STATE_ANSI)
-```
-
-
-```{r}
-crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & STATE_NAME == "TEXAS" & YEAR == 1987]
-```
-
-
-
-```{r}
-crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY", .N, STATE_NAME][order(-N)]
-```
 
 
 ```{r}
@@ -80,70 +37,47 @@ crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DES
 # The highest reported annual corn yield was in 2016 in Sutter County, California with a yield of 264.1 bushels per acre. 
 ```
 
-```{r}
-crops[COMMODITY_DESC == "SOYBEANS"] 
-```
-```{r}
-crops[COMMODITY_DESC == "SOYBEANS", .N, by=SHORT_DESC][order(-N)]
-```
-```{r}
-crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & YEAR == 2014, .N, by=.(YEAR, STATE_NAME)]
-```
-```{r}
-crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & YEAR == 2014, .N, by=.(YEAR, STATE_NAME)][order(-N)]
-```
 
-```{r}
-crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & AGG_LEVEL_DESC == "COUNTY" & STATE_NAME == "IOWA" & YEAR == 2014]
-```
-```{r}
-crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & AGG_LEVEL_DESC == "COUNTY", .N, STATE_NAME][order(-N)]
-```
- 
-
-
-```{r}
+```{r, results='hide'}
 #Q3: What state has the most acres of soy in 2014?
 # I'm not entirely sure how to deal with the D values but I want to make sure that counties with D values are included in the state total 
 crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & YEAR == 2014 & AGG_LEVEL_DESC == "COUNTY", .(soy_acres = sum(as.numeric(gsub(",","",ifelse(VALUE == "(D)", "0", VALUE))), na.rm = TRUE)), by=.(STATE_NAME)][order(-soy_acres)]
 # Iowa had the most acres of soy planted in 2014, with 9.85 million acres planted. 
 ```
 
-```{r}
+```{r, results='hide'}
 # Reading in the shapefile 
 county <- st_read("/vsizip/cb_2015_us_county_20m (2).zip/cb_2015_us_county_20m/cb_2015_us_county_20m.shp")
 ```
 
-
-```{r}
-names(county)
-```
-```{r}
-head(county)
-```
-```{r}
+```{r, results='hide'}
 county$FIPS <- paste(county$STATEFP, county$COUNTYFP, sep = "")
 print(county$FIPS)
 ```
 
 
-```{r}
+```{r,results='hide'}
 crops$FIPS <- paste(crops$STATE_ANSI, crops$COUNTY_ANSI, sep = "")
 print(crops$FIPS)
 ```
 
 
-```{r}
+```{r, results='hide', cache=TRUE}
 # Merge the crops dataset with the county dataset
-county_crops <- merge(county, crops, by="FIPS", all.x=TRUE, all.y=TRUE)
-print(county_crops$FIPS)
+# Ran this in the console once and linked it back here because it is so large
+# What I ran in the console
+# county_crops <- merge(county, crops, by="FIPS", all.x=TRUE, all.y=TRUE)
+# print(county_crops$FIPS)
+county_crops <- readRDS("county_crops.rds")
 ```
-```{r}
+
+```{r, results='hide', cache=TRUE}
 # This takes a long time to run 
 class(county_crops)
 county_crops <- as.data.table(county_crops)
 ```
-```{r}
+
+```{r, warning=FALSE}
 # Convert to numeric
 county_crops[, VALUE := as.numeric(gsub(",","",ifelse(VALUE == "(D)", "0", VALUE)))]
 ```
@@ -156,12 +90,7 @@ county_crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & YEAR >= 1990, .(avg_frac
 ```
 
 
-```{r}
-# Test map 
-plot(county)
-```
-
-```{r}
+```{r,results='hide'}
 # Need to remember that county crops is now a data table, so I will still need to convert back to an sf for it to be spatial 
 corn_yield_map <- county_crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & YEAR >= 1990, .(avg_yield = mean(as.numeric(gsub(",", "", VALUE)), na.rm = TRUE)), by = .(STATE_NAME, COUNTY_NAME, FIPS)]
 print(corn_yield_map)
@@ -173,7 +102,7 @@ county_geoms <- st_as_sf(county_crops)
 county_geoms <- county_geoms[!duplicated(county_geoms$FIPS), c("FIPS", "geometry")]
 ```
 
-```{r}
+```{r, warning=FALSE, cache=TRUE}
 # Rejoin and go back to sf
 corn_yield_map_sf <- st_as_sf(merge(county_geoms, as.data.frame(corn_yield_map), county_geoms, by.x = "FIPS", by.y = "FIPS", all.x = TRUE))
 
@@ -186,48 +115,26 @@ library(viridis)
 plot(corn_yield_map_sf["avg_yield"], pal = viridis, breaks="jenks", key.pos=4, axes=T, main="County Average Corn Yield Since 1990 (BU/Acre)", xlim = c(-125, -66), ylim = c(24, 50))
 ```
 
-```{r}
-# Finding the most recent year in the NASS Data
-crops[, unique(YEAR)]
-```
-```{r}
-crops[grepl("CORN.*YIELD", SHORT_DESC), unique(SHORT_DESC)]
-```
-```{r}
-crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE", unique(YEAR)]
-```
-```{r}
-crops[, class(VALUE)]
-```
-
-```{r}
-# Make sure that values are Numeric 
-crops[, VALUE := as.numeric(gsub(",","",ifelse(VALUE == "(D)", "0", VALUE)))]
-```
-
-```{r}
-char_cols <- names(crops)[sapply(crops, is.character)]
-crops[, (char_cols) := lapply(.SD, trimws), .SDcols = char_cols]
-```
 
 
 ```{r}
-# Isolating the 2017 corn yield value
-corn_yield_2017 <- crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & YEAR == 2017, .(STATE_NAME, COUNTY_NAME, VALUE)]
-print(corn_yield_2017)
+# Subset the data 
+corn_yield_trend <- county_crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & YEAR >= 1990, .(YEAR = YEAR, yield = as.numeric(gsub(",", "", VALUE))), by = .(STATE_NAME, COUNTY_NAME, FIPS)]
 ```
 
 ```{r}
-# Isolating the 1990 corn yield value 
-
+# Creating the linear model 
+corn_yield_slope <- corn_yield_trend[!is.na(yield), .(slope=coef(lm(yield ~ YEAR))[2]), by = .(STATE_NAME, COUNTY_NAME, FIPS)]
 ```
 
 ```{r}
-# Finding the county level increase in corn yield 
+# Rejoin the geometries 
+corn_slope_map_sf <- st_as_sf(merge(county_geoms, as.data.frame(corn_yield_slope), by = "FIPS", all.x = TRUE))
 ```
 
 
 ```{r}
 #Q5: Map 2: county rate of corn yield increase (slope of trend since 1990)
+plot(corn_slope_map_sf["slope"], pal = viridis, breaks="jenks", key.pos=4, axes=T, main="County Average Corn Yield Increase Since 1990 (BU/Acre/Year)", xlim = c(-125, -66), ylim = c(24, 50))
 ```
 
