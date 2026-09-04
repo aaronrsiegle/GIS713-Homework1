@@ -22,21 +22,17 @@ library(R.utils)
 crops <- fread("qs.crops_20170829.txt.gz")
 ```
 
-
-
 ```{r}
 #Q1: What US county has recorded the highest average corn yield since 1990?
 crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & YEAR >= 1990, .(avg_yield = mean(as.numeric(VALUE), na.rm = TRUE)), by = .(STATE_NAME, COUNTY_NAME)][order(-avg_yield)]
 # The county with the highest average corn yield since 1990 is Benton County, Washington with an average corn yield of 225.84 Bushels per acre. 
 ```
 
-
 ```{r}
 #Q2: What is the highest reported annual corn yield? In what county?
 crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY", .(max_yield = max(as.numeric(VALUE), na.rm = TRUE)), by = .(STATE_NAME, COUNTY_NAME, YEAR)][order(-max_yield)]
 # The highest reported annual corn yield was in 2016 in Sutter County, California with a yield of 264.1 bushels per acre. 
 ```
-
 
 ```{r, results='hide'}
 #Q3: What state has the most acres of soy in 2014?
@@ -55,20 +51,22 @@ county$FIPS <- paste(county$STATEFP, county$COUNTYFP, sep = "")
 print(county$FIPS)
 ```
 
-
 ```{r,results='hide'}
-crops$FIPS <- paste(crops$STATE_ANSI, crops$COUNTY_ANSI, sep = "")
+crops[, FIPS := paste(STATE_ANSI, COUNTY_ANSI, sep= "")]
 print(crops$FIPS)
 ```
+```{r}
+# Subset the crops data table to make the joining process less computationally intense
+crops_subset <- crops[, .SD, .SDcols = c("VALUE", "SHORT_DESC", "YEAR", "STATE_NAME", "AGG_LEVEL_DESC", "FIPS")]
+```
+
 
 
 ```{r, results='hide', cache=TRUE}
 # Merge the crops dataset with the county dataset
-# Ran this in the console once and linked it back here because it is so large
-# What I ran in the console
-# county_crops <- merge(county, crops, by="FIPS", all.x=TRUE, all.y=TRUE)
-# print(county_crops$FIPS)
-county_crops <- readRDS("county_crops.rds")
+county_crops <- merge(county, crops_subset, by="FIPS", all.x=TRUE, all.y=TRUE)
+print(county_crops$FIPS)
+
 ```
 
 ```{r, results='hide', cache=TRUE}
@@ -82,13 +80,11 @@ county_crops <- as.data.table(county_crops)
 county_crops[, VALUE := as.numeric(gsub(",","",ifelse(VALUE == "(D)", "0", VALUE)))]
 ```
 
-
 ```{r}
 #Q4: What state has the highest average land fraction used for soy production since 1990?
 county_crops[SHORT_DESC == "SOYBEANS - ACRES PLANTED" & YEAR >= 1990, .(avg_frac_soy = mean(VALUE/as.numeric(ALAND), na.rm = TRUE)), by=.(STATE_NAME)][order(-avg_frac_soy)]
 # Illinois has the highest average land fraction used for soy since 1990 at 6.78x10^-5. 
 ```
-
 
 ```{r,results='hide'}
 # Need to remember that county crops is now a data table, so I will still need to convert back to an sf for it to be spatial 
@@ -108,14 +104,11 @@ corn_yield_map_sf <- st_as_sf(merge(county_geoms, as.data.frame(corn_yield_map),
 
 ```
 
-
 ```{r}
 #Q5: Map 1: county average corn yield since 1990
 library(viridis)
 plot(corn_yield_map_sf["avg_yield"], pal = viridis, breaks="jenks", key.pos=4, axes=T, main="County Average Corn Yield Since 1990 (BU/Acre)", xlim = c(-125, -66), ylim = c(24, 50))
 ```
-
-
 
 ```{r}
 # Subset the data 
@@ -132,9 +125,7 @@ corn_yield_slope <- corn_yield_trend[!is.na(yield), .(slope=coef(lm(yield ~ YEAR
 corn_slope_map_sf <- st_as_sf(merge(county_geoms, as.data.frame(corn_yield_slope), by = "FIPS", all.x = TRUE))
 ```
 
-
 ```{r}
 #Q5: Map 2: county rate of corn yield increase (slope of trend since 1990)
 plot(corn_slope_map_sf["slope"], pal = viridis, breaks="jenks", key.pos=4, axes=T, main="County Average Corn Yield Increase Since 1990 (BU/Acre/Year)", xlim = c(-125, -66), ylim = c(24, 50))
 ```
-
