@@ -163,14 +163,27 @@ plot(county)
 
 ```{r}
 # Need to remember that county crops is now a data table, so I will still need to convert back to an sf for it to be spatial 
-corn_yield_map <- crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & YEAR >= 1990, .(avg_yield = mean(as.numeric(gsub(",", "", VALUE)), na.rm = TRUE)), by = .(STATE_NAME, COUNTY_NAME, FIPS)]
+corn_yield_map <- county_crops[SHORT_DESC == "CORN, GRAIN - YIELD, MEASURED IN BU / ACRE" & AGG_LEVEL_DESC == "COUNTY" & YEAR >= 1990, .(avg_yield = mean(as.numeric(gsub(",", "", VALUE)), na.rm = TRUE)), by = .(STATE_NAME, COUNTY_NAME, FIPS)]
 print(corn_yield_map)
 ```
 
 ```{r}
+# Getting geometries so that it can be made spatial again 
+county_geoms <- st_as_sf(county_crops)
+county_geoms <- county_geoms[!duplicated(county_geoms$FIPS), c("FIPS", "geometry")]
+```
+
+```{r}
+# Rejoin and go back to sf
+corn_yield_map_sf <- st_as_sf(merge(county_geoms, as.data.frame(corn_yield_map), county_geoms, by.x = "FIPS", by.y = "FIPS", all.x = TRUE))
+
+```
+
+
+```{r}
 #Q5: Map 1: county average corn yield since 1990
 library(viridis)
-plot(corn_yield_map_projected["avg_yield"], pal = viridis, breaks="jenks", key.pos=4, axes=T, main="County Average Corn Yield Since 1990 (BU/Acre)", xlim = c(-125, -66), ylim = c(24, 50))
+plot(corn_yield_map_sf["avg_yield"], pal = viridis, breaks="jenks", key.pos=4, axes=T, main="County Average Corn Yield Since 1990 (BU/Acre)", xlim = c(-125, -66), ylim = c(24, 50))
 ```
 
 ```{r}
